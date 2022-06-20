@@ -1,0 +1,58 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Create a cloudformation macro function then call it from a nested template
+
+Parameters:
+  NumberOfSsmParams:
+    Type: Number
+    Default: 3
+
+Resources:
+  MacroOutputSsmRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /Lambda/
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    
+  MacroOutputSsmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.8
+      CodeUri: ./src/macro_output_ssm_params
+      Handler: macro_output_ssm_params.handler
+      Timeout: 20
+      Description: Macro function to output some SSM Params
+      Role: !GetAtt MacroOutputSsmRole.Arn
+  
+  MacroOutputSsmFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt MacroOutputSsmFunction.Arn
+      Principal: cloudformation.amazonaws.com
+  
+  MacroOutputSsm:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Name: MacroOutputSsm
+      FunctionName: !GetAtt MacroOutputSsmFunction.Arn
+
+  RunTheMacro:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: MacroOutputSsm
+    Properties:
+      Parameters:
+        NumberOfSsmParams: !Ref NumberOfSsmParams
+      TemplateURL: ./ssm_params.yml

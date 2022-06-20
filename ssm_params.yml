@@ -1,0 +1,28 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Transform:
+  - MacroOutputSsm
+Description: |
+  Example of modifying an resource in a template and outputting some complete resources from a Macro
+
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W2001
+
+Parameters:
+  NumberOfSsmParams:
+    Type: Number
+
+Resources:
+  NormalSsmParam:
+    Type: AWS::SSM::Parameter
+    Properties: 
+      Description: Made normally in CFN
+      Name: /Cfn/MacroExampleNormal
+      Type: String
+      # below is transformed by the macro to a different value
+      Value: TRANSFORMED_BY_MACRO
+  
+  # all the other resources (multiple SSM Params) will be output by the macro
