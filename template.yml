@@ -51,7 +51,9 @@ Resources:
 
   RunTheMacro:
     Type: AWS::CloudFormation::Stack
-    DependsOn: MacroOutputSsm
+    DependsOn: 
+      - MacroOutputSsm
+      - MacroOutputSsmFunctionPermission
     Properties:
       Parameters:
         NumberOfSsmParams: !Ref NumberOfSsmParams
